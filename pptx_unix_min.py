@@ -11,7 +11,7 @@ from pptx import Presentation
 
 # Харды
 PPTX_PATH = Path("presentation_demo.pptx").resolve()
-API_URL = "http://localhost:5678/webhook-test/webhook-test/pptx"
+API_URL = "http://localhost:5678/webhook-test/pptx"
 OUT_DIR = Path("./_pptx_out").resolve()
 DPI = 144  # можно поднять до 200–300 для более четких PNG
 

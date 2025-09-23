@@ -6,6 +6,11 @@ DC := docker compose
 
 start_services:
 	docker-compose up -d
-send_file:
-	docker build -t $(IMAGE) .
+IMAGE=my-app
+DOCKERFILE=Dockerfile
+
+$(IMAGE): $(DOCKERFILE)
+	docker build -t $(IMAGE) -f $(DOCKERFILE) .
+
+send_file: $(IMAGE)
 	docker run --rm --network host -v $(PWD):/app -w /app $(IMAGE)

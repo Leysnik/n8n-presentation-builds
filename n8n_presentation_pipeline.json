@@ -4,7 +4,7 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "webhook-test/pptx",
+        "path": "pptx",
         "responseMode": "responseNode",
         "options": {}
       },
