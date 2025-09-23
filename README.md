@@ -44,13 +44,6 @@ make send_file
 └── n8n-pptx-workflow-fixed.json  # Workflow для импорта в n8n
 ```
 
-## Требования
-
-- Docker и Docker Compose
-- LibreOffice (`brew install libreoffice` на macOS)
-- Ghostscript (`brew install ghostscript` на macOS)
-- Python пакеты: `pip install python-pptx requests`
-
 ## Как это работает
 
 1. **pptx_unix_min.py** читает presentation_demo.pptx, извлекает заметки докладчика и рендерит слайды в PNG
@@ -61,7 +54,7 @@ make send_file
    - Склеивает все сегменты в финальный MP4
 4. Возвращает готовое видео
 
-## Формат входных данных
+## Формат входных данных на n8n webhook
 
 ```json
 {

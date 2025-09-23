@@ -185,7 +185,7 @@
     },
     {
       "parameters": {
-        "command": "ffmpeg -f concat -safe 0 -i file_list.txt -c copy ans.mp4\n"
+        "command": "ffmpeg -f concat -safe 0 -i file_list.txt -c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 192k ans.mp4\n"
       },
       "name": "ffmpeg Concat",
       "type": "n8n-nodes-base.executeCommand",
@@ -227,7 +227,7 @@
     },
     {
       "parameters": {
-        "command": "=rm -rf videos\nmkdir videos\necho \"\" > file_list.txt"
+        "command": "=rm -rf videos\n\nmkdir videos\nrm file_list.txt"
       },
       "name": "mkdir",
       "type": "n8n-nodes-base.executeCommand",
@@ -240,7 +240,7 @@
     },
     {
       "parameters": {
-        "command": "=echo \"file {{ $('Make Image Binary').item.json.video_file }} \" >> file_list.txt\n"
+        "command": "=echo -n \"file {{ $('Make Image Binary').item.json.video_file }} \" >> file_list.txt\n"
       },
       "name": "name saver",
       "type": "n8n-nodes-base.executeCommand",
@@ -414,7 +414,7 @@
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "ce067381-f87e-41f2-8330-dd636f96aca0",
+  "versionId": "1835cdba-ed6c-4129-8732-f0bc3d08e9c7",
   "meta": {
     "templateCredsSetupCompleted": true,
     "instanceId": "bd24d81438ad333166572f7a9f13d1db74f85c37d58472072793d11beec8d956"
