@@ -91,6 +91,8 @@ def main():
     payload = {"slides": slides}
     resp = requests.post(API_URL, json=payload, timeout=3600)
     resp.raise_for_status()
+    with open('video.mp4', 'wb') as f:
+        f.write(resp.content)
     print(f"OK: sent {len(slides)} slide(s) to {API_URL}")
 
 
