@@ -5,7 +5,7 @@
       "parameters": {
         "httpMethod": "POST",
         "path": "webhook-test/pptx",
-        "responseMode": "lastNode",
+        "responseMode": "responseNode",
         "options": {}
       },
       "name": "Webhook",
@@ -33,7 +33,7 @@
     },
     {
       "parameters": {
-        "functionCode": "// Make Image Binary — корректно формируем items[n].binary.slideImage\nconst item = items[0] || { json: {} };\n\n// Получаем слайд индекс и base64-строку\nconst slideIndex = item.json.slide_index ?? item.json.index ?? 0;\nlet imageBase64 = (item.json.image_base64 || '').toString();\n\n// Убираем возможный префикс data:image/...;base64,\nimageBase64 = imageBase64.replace(/^data:image\\/\\w+;base64,/, '').trim();\n\n// Инициализируем object.binary\nitem.binary = item.binary || {};\n\n// Если есть картинка — создаём корректное бинарное поле\nif (imageBase64 && imageBase64.length > 10) { // простая проверка длины\n  item.binary.slideImage = {\n    data: imageBase64, // НУЖНО: base64-строка (без префикса)\n    fileName: `slide_${slideIndex}.png`,\n    mimeType: 'image/png',\n  };\n} else {\n  // Если картинки нет — можно положить заглушку (простой 1x1 png) или оставить пустым.\n  // Ниже — прозрачный 1x1 PNG в base64 (необязательно):\n  const transparent1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';\n  item.binary.slideImage = {\n    data: transparent1x1,\n    fileName: `slide_${slideIndex}.png`,\n    mimeType: 'image/png',\n  };\n}\n\n// Записываем пути файлов в json для последующих нод\nitem.json.image_file = `slide_${slideIndex}.png`;\nitem.json.audio_file = `slide_${slideIndex}.wav`;\nitem.json.video_file = `videos/slide_${slideIndex}.mp4`;\nitem.json.slide_index = slideIndex;\n\nreturn [item];\n"
+        "functionCode": "// Make Image Binary — корректно формируем items[n].binary.slideImage\nconst item = items[0] || { json: {} };\n\n// Получаем слайд индекс и base64-строку\nconst slideIndex = item.json.slide_index ?? item.json.index ?? 0;\nlet imageBase64 = (item.json.image_base64 || '').toString();\n\n// Убираем возможный префикс data:image/...;base64,\nimageBase64 = imageBase64.replace(/^data:image\\/\\w+;base64,/, '').trim();\n\n// Инициализируем object.binary\nitem.binary = item.binary || {};\n\n// Если есть картинка — создаём корректное бинарное поле\nif (imageBase64 && imageBase64.length > 10) { // простая проверка длины\n  item.binary.slideImage = {\n    data: imageBase64, // НУЖНО: base64-строка (без префикса)\n    fileName: `slide_${slideIndex}.png`,\n    mimeType: 'image/png',\n  };\n} else {\n  // Если картинки нет — можно положить заглушку (простой 1x1 png) или оставить пустым.\n  // Ниже — прозрачный 1x1 PNG в base64 (необязательно):\n  const transparent1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';\n  item.binary.slideImage = {\n    data: transparent1x1,\n    fileName: `slide_${slideIndex}.png`,\n    mimeType: 'image/png',\n  };\n}\n\n// Записываем пути файлов в json для последующих нод\nitem.json.image_file = `slide_${slideIndex}.png`;\nitem.json.audio_file = `slide_${slideIndex}.wav`;\nitem.json.video_file = `videos/slide_${slideIndex}.mov`;\nitem.json.slide_index = slideIndex;\n\nreturn [item];\n"
       },
       "name": "Make Image Binary",
       "type": "n8n-nodes-base.function",
@@ -74,7 +74,7 @@
             },
             {
               "name": "text",
-              "value": "={{ $json.notes }}"
+              "value": "={{ $('Make Image Binary').item.json.notes }}"
             },
             {
               "name": "ssml",
@@ -103,8 +103,8 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
-        1088,
-        -688
+        1168,
+        -976
       ],
       "id": "8a0b69dd-4669-4e9e-b9b4-6c51c06f4275",
       "credentials": {
@@ -116,7 +116,7 @@
     },
     {
       "parameters": {
-        "fileName": "={{ $json.audio_file }}",
+        "fileName": "={{ $('Make Image Binary').item.json.audio_file }}",
         "options": {}
       },
       "name": "Write Audio File",
@@ -130,23 +130,7 @@
     },
     {
       "parameters": {
-        "fileName": "={{ $json.image_file }}",
-        "dataPropertyName": "slideImage",
-        "options": {}
-      },
-      "name": "Write Image File",
-      "type": "n8n-nodes-base.writeBinaryFile",
-      "typeVersion": 1,
-      "position": [
-        832,
-        -704
-      ],
-      "id": "ffd84bfa-06aa-41d5-aba5-994e2e6ecd73",
-      "executeOnce": true
-    },
-    {
-      "parameters": {
-        "command": "=ffprobe -v error -show_entries format=duration -of csv=p=0 {{ $json.audio_file }}"
+        "command": "=ffprobe -v error -show_entries format=duration -of csv=p=0 {{ $('Make Image Binary').item.json.audio_file }}"
       },
       "name": "ffprobe Get Duration",
       "type": "n8n-nodes-base.executeCommand",
@@ -185,7 +169,7 @@
     },
     {
       "parameters": {
-        "command": "ffmpeg -f concat -safe 0 -i file_list.txt -c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 192k ans.mp4\n"
+        "command": "rm ans.mp4; ffmpeg -f concat -safe 0 -i file_list.txt -c:v libx264 -preset veryfast -crf 23 -c:a aac -b:a 192k ans.mp4;"
       },
       "name": "ffmpeg Concat",
       "type": "n8n-nodes-base.executeCommand",
@@ -214,20 +198,23 @@
     },
     {
       "parameters": {
+        "respondWith": "binary",
+        "responseDataSource": "set",
         "options": {}
       },
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        1488,
-        -272
+        1664,
+        -288
       ],
       "id": "dcd149f3-3c0d-44ab-bac0-a28e4460ed11",
-      "name": "Respond to Webhook"
+      "name": "Respond to Webhook",
+      "alwaysOutputData": false
     },
     {
       "parameters": {
-        "command": "=rm -rf videos\n\nmkdir videos\nrm file_list.txt"
+        "command": "=rm -rf videos\n\nmkdir videos\necho \"\" > file_list.txt\nrm file_list.txt"
       },
       "name": "mkdir",
       "type": "n8n-nodes-base.executeCommand",
@@ -240,7 +227,7 @@
     },
     {
       "parameters": {
-        "command": "=echo -n \"file {{ $('Make Image Binary').item.json.video_file }} \" >> file_list.txt\n"
+        "command": "=echo \"file '{{ $('Make Image Binary').item.json.video_file }}' \" >> file_list.txt\n"
       },
       "name": "name saver",
       "type": "n8n-nodes-base.executeCommand",
@@ -250,6 +237,35 @@
         -432
       ],
       "id": "6f8908a1-bd26-4bfc-b837-5f8031eb30aa"
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $json.image_file }}",
+        "dataPropertyName": "slideImage",
+        "options": {}
+      },
+      "name": "Write Audio File1",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -1136
+      ],
+      "id": "663f3e90-cee0-446f-a0df-8c9a417799a9"
+    },
+    {
+      "parameters": {
+        "fileSelector": "ans.mp4",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.readWriteFile",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        32
+      ],
+      "id": "6be3c7d6-6844-4e6b-9420-51d0b86ea816",
+      "name": "Read/Write Files from Disk"
     }
   ],
   "pinData": {},
@@ -285,18 +301,7 @@
       "main": [
         [
           {
-            "node": "Write Image File",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Write Image File": {
-      "main": [
-        [
-          {
-            "node": "HTTP Request (TTS)",
+            "node": "Write Audio File1",
             "type": "main",
             "index": 0
           }
@@ -362,7 +367,7 @@
       "main": [
         [
           {
-            "node": "Respond to Webhook",
+            "node": "Read/Write Files from Disk",
             "type": "main",
             "index": 0
           }
@@ -403,6 +408,28 @@
         [
           {
             "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Audio File1": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (TTS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read/Write Files from Disk": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
             "type": "main",
             "index": 0
           }
