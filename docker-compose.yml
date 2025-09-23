@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  n8n:
+    image: rxchi1d/n8n-ffmpeg:latest
+    container_name: n8n
+    restart: always
+    ports:
+      - "5678:5678"
+    environment:
+      - GENERIC_TIMEZONE=Europe/Moscow
+      - GENERIC_LANGUAGE=ru
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=strongpassword
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - NODE_ENV=production
+    volumes:
+      - ./n8n_data:/home/node/.n8n
+  opentts:
+    image: synesthesiam/opentts:ru  # можно заменить на synesthesiam/opentts:all
+    container_name: opentts
+    command: ["--cache", "/cache", "--no-espeak"]
+    ports:
+      - "5500:5500"
+    volumes:
+      - opentts_cache:/cache
+    restart: unless-stopped
+
+volumes:
+  opentts_cache:

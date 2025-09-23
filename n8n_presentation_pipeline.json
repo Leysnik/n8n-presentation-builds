@@ -1,0 +1,424 @@
+{
+  "name": "pptx-to-video-tts",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "webhook-test/pptx",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        -256
+      ],
+      "id": "b8b2a41a-c93b-4285-bffb-01b5855620cf",
+      "webhookId": "755b267a-e2f0-4bd1-a01c-52c1fa69c938"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Prepare Slides — возвращает отдельный item для каждого слайда\nconst payload = items[0]?.json || {};\n\n// Возможные варианты входа:\n// 1) payload.slides = [ {...}, {...} ]\n// 2) payload.body.slides = ...\n// 3) payload — сам уже массив слайдов\nlet slides = [];\n\n// 1) если payload.slides — используем его\nif (Array.isArray(payload.slides)) {\n  slides = payload.slides;\n} else if (payload.body && Array.isArray(payload.body.slides)) {\n  // 2) если payload.body.slides\n  slides = payload.body.slides;\n} else if (Array.isArray(payload)) {\n  // 3) если payload itself is array (rare)\n  slides = payload;\n} else if (Array.isArray(items[0]?.json?.slides)) {\n  // ещё запасной вариант\n  slides = items[0].json.slides;\n}\n\n// Гарантируем, что slides — массив\nif (!Array.isArray(slides)) slides = [];\n\n// Возвращаем N items, каждый item = один слайд (и добавляем slide_index если его нет)\nreturn slides.map((s, i) => {\n  const slide = (typeof s === 'object' && s !== null) ? s : { notes: String(s) };\n  if (!slide.slide_index) slide.slide_index = i + 1;\n  return { json: slide };\n});\n"
+      },
+      "name": "Prepare Slides",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        320,
+        -432
+      ],
+      "id": "33de6a8d-81ee-4e6f-84ea-e7e8cc86e169"
+    },
+    {
+      "parameters": {
+        "functionCode": "// Make Image Binary — корректно формируем items[n].binary.slideImage\nconst item = items[0] || { json: {} };\n\n// Получаем слайд индекс и base64-строку\nconst slideIndex = item.json.slide_index ?? item.json.index ?? 0;\nlet imageBase64 = (item.json.image_base64 || '').toString();\n\n// Убираем возможный префикс data:image/...;base64,\nimageBase64 = imageBase64.replace(/^data:image\\/\\w+;base64,/, '').trim();\n\n// Инициализируем object.binary\nitem.binary = item.binary || {};\n\n// Если есть картинка — создаём корректное бинарное поле\nif (imageBase64 && imageBase64.length > 10) { // простая проверка длины\n  item.binary.slideImage = {\n    data: imageBase64, // НУЖНО: base64-строка (без префикса)\n    fileName: `slide_${slideIndex}.png`,\n    mimeType: 'image/png',\n  };\n} else {\n  // Если картинки нет — можно положить заглушку (простой 1x1 png) или оставить пустым.\n  // Ниже — прозрачный 1x1 PNG в base64 (необязательно):\n  const transparent1x1 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=';\n  item.binary.slideImage = {\n    data: transparent1x1,\n    fileName: `slide_${slideIndex}.png`,\n    mimeType: 'image/png',\n  };\n}\n\n// Записываем пути файлов в json для последующих нод\nitem.json.image_file = `slide_${slideIndex}.png`;\nitem.json.audio_file = `slide_${slideIndex}.wav`;\nitem.json.video_file = `videos/slide_${slideIndex}.mp4`;\nitem.json.slide_index = slideIndex;\n\nreturn [item];\n"
+      },
+      "name": "Make Image Binary",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        640,
+        -944
+      ],
+      "id": "0a7a395d-9028-4040-8c11-167b834f81e6",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "notesInFlow": false
+    },
+    {
+      "parameters": {
+        "authentication": "basicAuth",
+        "url": "http://host.docker.internal:5500/api/tts",
+        "allowUnauthorizedCerts": true,
+        "responseFormat": "file",
+        "options": {},
+        "queryParametersUi": {
+          "parameter": [
+            {
+              "name": "voice",
+              "value": "glow-speak:ru_nikolaev"
+            },
+            {
+              "name": "lang",
+              "value": "ru"
+            },
+            {
+              "name": "vocoder",
+              "value": "vocoder"
+            },
+            {
+              "name": "denoiserStrength",
+              "value": "0.005"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.notes }}"
+            },
+            {
+              "name": "ssml",
+              "value": "false"
+            },
+            {
+              "name": "ssmlNumbers",
+              "value": "true"
+            },
+            {
+              "name": "ssmlDates",
+              "value": "true"
+            },
+            {
+              "name": "ssmlCurrency",
+              "value": "true"
+            },
+            {
+              "name": "cache",
+              "value": "true"
+            }
+          ]
+        }
+      },
+      "name": "HTTP Request (TTS)",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        1088,
+        -688
+      ],
+      "id": "8a0b69dd-4669-4e9e-b9b4-6c51c06f4275",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "XGSMevp4mssOzlzs",
+          "name": "Unnamed credential"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $json.audio_file }}",
+        "options": {}
+      },
+      "name": "Write Audio File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        1312,
+        -800
+      ],
+      "id": "bba090cc-f4ac-49de-b028-08afe8ba5299"
+    },
+    {
+      "parameters": {
+        "fileName": "={{ $json.image_file }}",
+        "dataPropertyName": "slideImage",
+        "options": {}
+      },
+      "name": "Write Image File",
+      "type": "n8n-nodes-base.writeBinaryFile",
+      "typeVersion": 1,
+      "position": [
+        832,
+        -704
+      ],
+      "id": "ffd84bfa-06aa-41d5-aba5-994e2e6ecd73",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "command": "=ffprobe -v error -show_entries format=duration -of csv=p=0 {{ $json.audio_file }}"
+      },
+      "name": "ffprobe Get Duration",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1536,
+        -880
+      ],
+      "id": "116d9e09-09bc-4647-8975-b48165c2d41d"
+    },
+    {
+      "parameters": {
+        "functionCode": "const out = items[0].json['stdout'] || items[0].json['output'] || '';\nlet duration = parseFloat((out || '').toString().trim());\nif (!isFinite(duration) || duration <= 0) {\n  duration = 1.0;\n}\nitems[0].json.duration = duration;\nreturn items;"
+      },
+      "name": "Parse Duration",
+      "type": "n8n-nodes-base.function",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -880
+      ],
+      "id": "1a0d225f-a876-4f4a-af2f-ea65245c667d"
+    },
+    {
+      "parameters": {
+        "command": "=ffmpeg -y -loop 1 -i {{ $('Make Image Binary').item.json.image_file }} -i {{ $('Make Image Binary').item.json.audio_file }} -c:v libx264 -t {{ $json.stdout }} -pix_fmt yuv420p -vf \"scale=1280:720\" -c:a aac -b:a 192k {{ $('Make Image Binary').item.json.video_file }}"
+      },
+      "name": "ffmpeg Create Slide Video",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1760,
+        -624
+      ],
+      "id": "e5a9f061-79e6-4035-9cad-376920421f1a"
+    },
+    {
+      "parameters": {
+        "command": "ffmpeg -f concat -safe 0 -i file_list.txt -c copy ans.mp4\n"
+      },
+      "name": "ffmpeg Concat",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        1200,
+        -288
+      ],
+      "id": "3eb7779b-6c27-48b2-bcf8-f11a196f9af7"
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": "="
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        848,
+        -272
+      ],
+      "id": "1efd041e-66b5-4ebd-8346-75246f6798be",
+      "name": "Loop Over Items",
+      "executeOnce": false
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        1488,
+        -272
+      ],
+      "id": "dcd149f3-3c0d-44ab-bac0-a28e4460ed11",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "command": "=rm -rf videos\nmkdir videos\necho \"\" > file_list.txt"
+      },
+      "name": "mkdir",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        -80,
+        -576
+      ],
+      "id": "69c74660-3702-4f27-95af-82252fae8bdf"
+    },
+    {
+      "parameters": {
+        "command": "=echo \"file {{ $('Make Image Binary').item.json.video_file }} \" >> file_list.txt\n"
+      },
+      "name": "name saver",
+      "type": "n8n-nodes-base.executeCommand",
+      "typeVersion": 1,
+      "position": [
+        800,
+        -432
+      ],
+      "id": "6f8908a1-bd26-4bfc-b837-5f8031eb30aa"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "mkdir",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Slides",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Slides": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Make Image Binary": {
+      "main": [
+        [
+          {
+            "node": "Write Image File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Image File": {
+      "main": [
+        [
+          {
+            "node": "HTTP Request (TTS)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HTTP Request (TTS)": {
+      "main": [
+        [
+          {
+            "node": "Write Audio File",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Write Audio File": {
+      "main": [
+        [
+          {
+            "node": "ffprobe Get Duration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ffprobe Get Duration": {
+      "main": [
+        [
+          {
+            "node": "Parse Duration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Duration": {
+      "main": [
+        [
+          {
+            "node": "ffmpeg Create Slide Video",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ffmpeg Create Slide Video": {
+      "main": [
+        [
+          {
+            "node": "name saver",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ffmpeg Concat": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [
+          {
+            "node": "ffmpeg Concat",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Make Image Binary",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mkdir": {
+      "main": [
+        [
+          {
+            "node": "Prepare Slides",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "name saver": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "ce067381-f87e-41f2-8330-dd636f96aca0",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "bd24d81438ad333166572f7a9f13d1db74f85c37d58472072793d11beec8d956"
+  },
+  "id": "lEs1YFs1Hypjkc3U",
+  "tags": []
+}
