@@ -14,47 +14,43 @@ make start_services
 Поднимает:
 - n8n (с ffmpeg) на порту 5678
 - OpenTTS на порту 5500
+- Python Flask на порту 8081 для конвертации презентации в json
 
-### 3. Обработка презентации
+### 3. Отправить презентацию на конвертациюё
+Для этого достаточно после запуска Workflow отправить файл на POST http://localhost:5678/webhook/pptx_to_video
+
+Для удобства данного процесса можно
 ```bash
-make send_file
+python -m venv venv
+source venv/bin/activate
+pip install -r requirements/local_requirements.txt
+
 ```
-Извлекает заметки докладчика, рендерит слайды и отправляет JSON на n8n workflow.
+После чего можно будет перейти на http://localhost:8082/n8n и удобно отпралять презентации
 
 ## Доступ к сервисам
 
 - **n8n**: http://localhost:5678
 - **OpenTTS**: http://localhost:5500
+- **Flask**: http://localhost:8081 (POST /convert)
 
 ## Workflow в n8n
 
 1. Импортируйте `n8n-pptx-workflow-fixed.json` в n8n
 2. Активируйте workflow
-3. Тестовый URL: `http://localhost:5678/webhook-test/pptx`
-
-## Структура проекта
-
-```
-├── presentation_demo.pptx    # Ваша презентация (обязательно!)
-├── pptx_unix_min.py         # Python скрипт обработки
-├── docker-compose.yml       # Docker сервисы
-├── Dockerfile               # Образ для Python скрипта
-├── requirements.txt         # Python зависимости
-├── Makefile                 # Команды управления
-└── n8n-pptx-workflow-fixed.json  # Workflow для импорта в n8n
-```
+3. Тестовый WEBHOOK для отправки видео: `http://localhost:5678/webhook-test/pptx`
 
 ## Как это работает
 
-1. **pptx_unix_min.py** читает presentation_demo.pptx, извлекает заметки докладчика и рендерит слайды в PNG
-2. Отправляет JSON с данными на n8n webhook
+1. **flask_pptx_converter.py** читает *.pptx, извлекает заметки докладчика и рендерит слайды в PNG
+2. Отправляет JSON с данными на n8n workflow
 3. **n8n workflow** для каждого слайда:
    - Получает аудио от OpenTTS
    - Создает видео из PNG + аудио через ffmpeg
    - Склеивает все сегменты в финальный MP4
 4. Возвращает готовое видео
 
-## Формат входных данных на n8n webhook
+## Формат выходных данных из http://lcoalhost:8081/convert
 
 ```json
 {
@@ -71,5 +67,4 @@ make send_file
 ## Команды
 
 - `make start_services` - запустить сервисы
-- `make send_file` - обработать presentation_demo.pptx
 - `docker-compose down` - остановить сервисы

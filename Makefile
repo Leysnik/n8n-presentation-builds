@@ -11,6 +11,3 @@ DOCKERFILE=Dockerfile
 
 $(IMAGE): $(DOCKERFILE)
 	docker build -t $(IMAGE) -f $(DOCKERFILE) .
-
-send_file: $(IMAGE)
-	docker run --rm --network host -v $(PWD):/app -w /app $(IMAGE)
