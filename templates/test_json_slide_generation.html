@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Конвертер презентаций</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1a5fb4;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .upload-area {
+      text-align: center;
+      padding: 40px 20px;
+      border: 2px dashed #1a5fb4;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      transition: background-color 0.3s;
+    }
+    .upload-area:hover {
+      background-color: #f0f6ff;
+    }
+    input[type="file"] {
+      margin-bottom: 16px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 300px;
+    }
+    input[type="submit"] {
+      background-color: #1a5fb4;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    input[type="submit"]:hover {
+      background-color: #00408a;
+    }
+    #response {
+      margin-top: 30px;
+      padding: 16px;
+      background-color: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-family: 'Courier New', monospace;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .loading {
+      text-align: center;
+      color: #666;
+      font-style: italic;
+      margin: 20px 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Это мега крутая форма для мега крутого теста</h1>
+    <div class="upload-area">
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" accept=".pptx" required>
+        <input type="submit" value="Отправить">
+      </form>
+    </div>
+    <div id="response"></div>
+  </div>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const responseDiv = document.getElementById('response');
+      
+      if (!file) {
+        responseDiv.innerHTML = '<p style="color: red;">Пожалуйста, выберите файл .pptx</p>';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        responseDiv.innerHTML = '<p class="loading">Идёт обработка презентации...</p>';
+        
+        const response = await fetch('http://127.0.0.1:8083/convert', {
+          method: 'POST',
+          body: formData
+        });
+        
+        const result = await response.json();
+        
+        responseDiv.innerHTML = '<h3>Результат:</h3><p>Файл: ' + result.filename + '</p><p>Слайдов: ' + result.total_slides + '</p>';
+        
+        if (result.slides && result.slides.length > 0) {
+          responseDiv.innerHTML += '<h4>Пример данных первых слайдов:</h4>';
+          for (let i = 0; i < Math.min(3, result.slides.length); i++) {
+            const slide = result.slides[i];
+            responseDiv.innerHTML += `
+              <details>
+                <summary>Слайд ${slide.slide_index}</summary>
+                <p><strong>Заметки:</strong> ${slide.notes || 'нет'}</p>
+                <p><strong>Изображение:</strong> data:image/png;base64,${slide.image_base64.substr(0, 50)}...</p>
+              </details>`;
+          }
+        }
+        
+      } catch (error) {
+        responseDiv.innerHTML = '<p style="color: red;">Ошибка: ' + error.message + '</p>';
+        console.error('Error:', error);
+      }
+    });
+  </script>
+</body>
+</html>

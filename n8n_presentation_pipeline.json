@@ -4,19 +4,22 @@
     {
       "parameters": {
         "httpMethod": "POST",
-        "path": "pptx",
+        "path": "pptx_to_video",
         "responseMode": "responseNode",
-        "options": {}
+        "options": {
+          "allowedOrigins": "*"
+        }
       },
       "name": "Webhook",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 1,
       "position": [
-        -288,
-        -256
+        -1984,
+        1008
       ],
-      "id": "b8b2a41a-c93b-4285-bffb-01b5855620cf",
-      "webhookId": "755b267a-e2f0-4bd1-a01c-52c1fa69c938"
+      "id": "9bc09c72-7dbc-4893-b0f5-a49709d04e98",
+      "webhookId": "755b267a-e2f0-4bd1-a01c-52c1fa69c938",
+      "alwaysOutputData": false
     },
     {
       "parameters": {
@@ -26,10 +29,10 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        320,
-        -432
+        -560,
+        704
       ],
-      "id": "33de6a8d-81ee-4e6f-84ea-e7e8cc86e169"
+      "id": "94240dfe-2a85-4b05-ae69-9458c47bfcf2"
     },
     {
       "parameters": {
@@ -39,10 +42,10 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        640,
-        -944
+        -240,
+        192
       ],
-      "id": "0a7a395d-9028-4040-8c11-167b834f81e6",
+      "id": "28a35794-db09-4d83-ad1c-588993083fd5",
       "executeOnce": true,
       "alwaysOutputData": true,
       "notesInFlow": false
@@ -103,10 +106,10 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
-        1168,
-        -976
+        288,
+        160
       ],
-      "id": "8a0b69dd-4669-4e9e-b9b4-6c51c06f4275",
+      "id": "16e1d434-56d0-4895-aaee-24bd1fe9b6c3",
       "credentials": {
         "httpBasicAuth": {
           "id": "XGSMevp4mssOzlzs",
@@ -123,10 +126,10 @@
       "type": "n8n-nodes-base.writeBinaryFile",
       "typeVersion": 1,
       "position": [
-        1312,
-        -800
+        432,
+        336
       ],
-      "id": "bba090cc-f4ac-49de-b028-08afe8ba5299"
+      "id": "7fef76f4-5a17-42fe-a680-7e92a1c58734"
     },
     {
       "parameters": {
@@ -136,10 +139,10 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        1536,
-        -880
+        656,
+        256
       ],
-      "id": "116d9e09-09bc-4647-8975-b48165c2d41d"
+      "id": "8b5d9283-1d4d-41cc-ab02-85a78f2ed981"
     },
     {
       "parameters": {
@@ -149,10 +152,10 @@
       "type": "n8n-nodes-base.function",
       "typeVersion": 1,
       "position": [
-        1760,
-        -880
+        880,
+        256
       ],
-      "id": "1a0d225f-a876-4f4a-af2f-ea65245c667d"
+      "id": "1028454b-5bdf-4de1-938b-1c0077faf752"
     },
     {
       "parameters": {
@@ -162,10 +165,10 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        1760,
-        -624
+        880,
+        512
       ],
-      "id": "e5a9f061-79e6-4035-9cad-376920421f1a"
+      "id": "d9bc0e8a-8ffd-4584-92b7-dbfa5d94b1d6"
     },
     {
       "parameters": {
@@ -175,10 +178,10 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        1200,
-        -288
+        320,
+        848
       ],
-      "id": "3eb7779b-6c27-48b2-bcf8-f11a196f9af7"
+      "id": "f981dc3c-320f-44d9-99e8-ad446ba76296"
     },
     {
       "parameters": {
@@ -189,10 +192,10 @@
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
       "position": [
-        848,
-        -272
+        -32,
+        864
       ],
-      "id": "1efd041e-66b5-4ebd-8346-75246f6798be",
+      "id": "0a51c8ff-5b2d-44d4-af45-470167d2521b",
       "name": "Loop Over Items",
       "executeOnce": false
     },
@@ -205,10 +208,10 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1.4,
       "position": [
-        1664,
-        -288
+        784,
+        848
       ],
-      "id": "dcd149f3-3c0d-44ab-bac0-a28e4460ed11",
+      "id": "5b12d1a0-c542-4a77-8cc5-e76deffc8abc",
       "name": "Respond to Webhook",
       "alwaysOutputData": false
     },
@@ -220,10 +223,10 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        -80,
-        -576
+        -960,
+        560
       ],
-      "id": "69c74660-3702-4f27-95af-82252fae8bdf"
+      "id": "6dd4acfc-32a6-4456-baae-ce0114400590"
     },
     {
       "parameters": {
@@ -233,10 +236,10 @@
       "type": "n8n-nodes-base.executeCommand",
       "typeVersion": 1,
       "position": [
-        800,
-        -432
+        -80,
+        704
       ],
-      "id": "6f8908a1-bd26-4bfc-b837-5f8031eb30aa"
+      "id": "fd1ff473-5ec9-42f2-8399-7e0c2ba7c3ec"
     },
     {
       "parameters": {
@@ -248,10 +251,10 @@
       "type": "n8n-nodes-base.writeBinaryFile",
       "typeVersion": 1,
       "position": [
-        880,
-        -1136
+        0,
+        0
       ],
-      "id": "663f3e90-cee0-446f-a0df-8c9a417799a9"
+      "id": "8a9f5742-ea85-4add-a994-0e556743fea0"
     },
     {
       "parameters": {
@@ -261,11 +264,37 @@
       "type": "n8n-nodes-base.readWriteFile",
       "typeVersion": 1,
       "position": [
-        1536,
-        32
+        656,
+        1168
       ],
-      "id": "6be3c7d6-6844-4e6b-9420-51d0b86ea816",
+      "id": "a3d0099a-206a-4301-bd88-ed24bea3f9fc",
       "name": "Read/Write Files from Disk"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://host.docker.internal:8081/convert",
+        "sendBody": true,
+        "contentType": "multipart-form-data",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "parameterType": "formBinaryData",
+              "name": "file",
+              "inputDataFieldName": "file"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1648,
+        992
+      ],
+      "id": "4c0c6f21-0507-4a51-b3da-3ba408d5b84d",
+      "name": "HTTP Request"
     }
   ],
   "pinData": {},
@@ -274,12 +303,7 @@
       "main": [
         [
           {
-            "node": "mkdir",
-            "type": "main",
-            "index": 0
-          },
-          {
-            "node": "Prepare Slides",
+            "node": "HTTP Request",
             "type": "main",
             "index": 0
           }
@@ -435,17 +459,32 @@
           }
         ]
       ]
+    },
+    "HTTP Request": {
+      "main": [
+        [
+          {
+            "node": "mkdir",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Prepare Slides",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "active": false,
   "settings": {
     "executionOrder": "v1"
   },
-  "versionId": "1835cdba-ed6c-4129-8732-f0bc3d08e9c7",
+  "versionId": "fd356a47-6952-4b79-9daf-f76658ecd6ef",
   "meta": {
-    "templateCredsSetupCompleted": true,
     "instanceId": "bd24d81438ad333166572f7a9f13d1db74f85c37d58472072793d11beec8d956"
   },
-  "id": "lEs1YFs1Hypjkc3U",
+  "id": "sQi3ZlnOQUzka8GZ",
   "tags": []
 }

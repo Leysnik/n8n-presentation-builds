@@ -16,10 +16,13 @@ services:
       - N8N_HOST=localhost
       - N8N_PORT=5678
       - NODE_ENV=production
+      - CORS_ORIGIN=http://localhost:8082  # не хочу пока мучаться с CORS
+      - WEBHOOK_URL=http://localhost:5678
     volumes:
       - ./n8n_data:/home/node/.n8n
+
   opentts:
-    image: synesthesiam/opentts:ru  # можно заменить на synesthesiam/opentts:all
+    image: synesthesiam/opentts:ru
     container_name: opentts
     command: ["--cache", "/cache", "--no-espeak"]
     ports:
@@ -27,6 +30,15 @@ services:
     volumes:
       - opentts_cache:/cache
     restart: unless-stopped
+
+  pptx-converter:
+    build: .
+    container_name: pptx-converter
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    #volumes:
+    #  - ./server.py:/app/server.py  # Для горячей перезагрузки при разработке
 
 volumes:
   opentts_cache:

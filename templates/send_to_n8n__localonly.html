@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Загрузка и скачивание файла</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 20px;
+      color: #333;
+    }
+    .container {
+      max-width: 800px;
+      margin: 40px auto;
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+    }
+    h1 {
+      text-align: center;
+      color: #1a5fb4;
+      margin-bottom: 30px;
+      font-size: 28px;
+    }
+    .upload-area {
+      text-align: center;
+      padding: 40px 20px;
+      border: 2px dashed #1a5fb4;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      transition: background-color 0.3s;
+    }
+    .upload-area:hover {
+      background-color: #f0f6ff;
+    }
+    input[type="file"] {
+      margin-bottom: 16px;
+      padding: 10px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      width: 100%;
+      max-width: 300px;
+    }
+    input[type="submit"] {
+      background-color: #1a5fb4;
+      color: white;
+      border: none;
+      padding: 12px 32px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    input[type="submit"]:hover {
+      background-color: #00408a;
+    }
+    #response {
+      margin-top: 30px;
+      text-align: center;
+    }
+    .loading {
+      color: #666;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Это еще более мегакрутая форма :)</h1>
+    <div class="upload-area">
+      <form id="uploadForm" enctype="multipart/form-data">
+        <input type="file" name="file" id="fileInput" accept=".pptx" required>
+        <input type="submit" value="Отправить">
+      </form>
+    </div>
+    <div id="response"></div>
+  </div>
+
+  <script>
+    document.getElementById('uploadForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      
+      const fileInput = document.getElementById('fileInput');
+      const file = fileInput.files[0];
+      const responseDiv = document.getElementById('response');
+      
+      if (!file) {
+        responseDiv.innerHTML = '<p style="color: red;">Пожалуйста, выберите файл .pptx</p>';
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        responseDiv.innerHTML = '<p class="loading">Идёт обработка... Подождите, файл будет автоматически скачан</p>';
+        
+        const response = await fetch('http://127.0.0.1:5678/webhook-test/pptx_to_video', {
+          method: 'POST',
+          body: formData
+        });
+
+        if (!response.ok) {
+          throw new Error(`Ошибка сервера: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+        
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        
+        const disposition = response.headers.get('Content-Disposition');
+        let filename = 'download';
+        if (disposition && disposition.indexOf('filename=') !== -1) {
+          filename = disposition.split('filename=')[1].trim().replace(/['"]/g, '');
+        } else {
+          const type = blob.type.split('/')[1] || 'bin';
+          filename = `result.${type}`;
+        }
+        
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        
+        responseDiv.innerHTML = `<p>Файл <strong>${filename}</strong> успешно скачан!</p>`;
+        
+      } catch (error) {
+        responseDiv.innerHTML = `<p style="color: red;">Ошибка: ${error.message}</p>`;
+        console.error('Error:', error);
+      }
+    });
+  </script>
+</body>
+</html>
