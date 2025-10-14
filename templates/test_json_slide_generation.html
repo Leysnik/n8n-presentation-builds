@@ -109,7 +109,7 @@
       try {
         responseDiv.innerHTML = '<p class="loading">Идёт обработка презентации...</p>';
         
-        const response = await fetch('http://127.0.0.1:8083/convert', {
+        const response = await fetch('http://127.0.0.1:8081/convert', {
           method: 'POST',
           body: formData
         });
